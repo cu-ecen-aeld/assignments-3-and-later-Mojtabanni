@@ -12,7 +12,6 @@ BUSYBOX_VERSION=1_33_1
 FINDER_APP_DIR=$(realpath $(dirname $0))
 ARCH=arm64
 CROSS_COMPILE=aarch64-none-linux-gnu-
-NADI=$(pwd)
 
 if [ $# -lt 1 ]
 then
@@ -92,10 +91,11 @@ ${CROSS_COMPILE}readelf -a bin/busybox | grep "Shared library"
 # TODO: Add library dependencies to rootfs
 ########################################
 cd ${OUTDIR}/rootfs
-cp /home/user/Downloads/gcc-arm-10.2-2020.11-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 lib/
-cp /home/user/Downloads/gcc-arm-10.2-2020.11-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 lib64/
-cp /home/user/Downloads/gcc-arm-10.2-2020.11-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 lib64/
-cp /home/user/Downloads/gcc-arm-10.2-2020.11-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 lib64/
+SYSROOT=$(${CROSS_COMPILE}gcc -print-sysroot)
+cp ${SYSROOT}/lib/ld-linux-aarch64.so.1 lib/
+cp ${SYSROOT}/lib64/libm.so.6 lib64/
+cp ${SYSROOT}/lib64/libresolv.so.2 lib64/
+cp ${SYSROOT}/lib64/libc.so.6 lib64/
 ########################################
 
 # TODO: Make device nodes
@@ -107,7 +107,7 @@ sudo mknod -m 600 dev/console c 5 1
 
 # TODO: Clean and build the writer utility
 ########################################
-cd ${NADI}
+cd ${FINDER_APP_DIR}
 pwd
 make CROSS_COMPILE=${CROSS_COMPILE} clean
 make CROSS_COMPILE=${CROSS_COMPILE} 
@@ -116,13 +116,13 @@ make CROSS_COMPILE=${CROSS_COMPILE}
 # TODO: Copy the finder related scripts and executables to the /home directory on the target rootfs
 ########################################
 cd ${OUTDIR}/rootfs
-cp ${NADI}/writer home/
-cp ${NADI}/finder.sh home/
+cp ${FINDER_APP_DIR}/writer home/
+cp ${FINDER_APP_DIR}/finder.sh home/
 mkdir -p home/conf
-cp ${NADI}/conf/username.txt home/conf/
-cp ${NADI}/conf/assignment.txt home/conf/
-cp ${NADI}/finder-test.sh home/
-cp ${NADI}/autorun-qemu.sh home/
+cp ${FINDER_APP_DIR}/conf/username.txt home/conf/
+cp ${FINDER_APP_DIR}/conf/assignment.txt home/conf/
+cp ${FINDER_APP_DIR}/finder-test.sh home/
+cp ${FINDER_APP_DIR}/autorun-qemu.sh home/
 ########################################
 
 # TODO: Chown the root directory
