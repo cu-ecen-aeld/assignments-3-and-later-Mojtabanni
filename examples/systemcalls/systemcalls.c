@@ -1,4 +1,9 @@
 #include "systemcalls.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 /**
  * @param cmd the command to execute with system()
@@ -9,6 +14,8 @@
 */
 bool do_system(const char *cmd)
 {
+    int returnCode = system(cmd);
+ 
 
 /*
  * TODO  add your code here
@@ -16,6 +23,8 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
+    if (returnCode == -1)
+        return false;
 
     return true;
 }
@@ -45,8 +54,6 @@ bool do_exec(int count, ...)
         command[i] = va_arg(args, char *);
     }
     command[count] = NULL;
-    // this line is to avoid a compile warning before your implementation is complete
-    // and may be removed
     command[count] = command[count];
 
 /*
@@ -58,6 +65,26 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+    pid_t pid = fork();
+    if (pid == -1)
+    {
+        perror("Fork failed");
+        return false;
+    }
+    else if (pid == 0)
+    {
+        execv(command[0], command);
+        exit(1);
+    }
+
+    int status = 0;
+
+    wait(&status);
+    if (status != 0)
+    {
+        perror("Failed to lauch execv()");
+        return false;
+    }
 
     va_end(args);
 
@@ -89,9 +116,45 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  * TODO
  *   Call execv, but first using https://stackoverflow.com/a/13784315/1446624 as a refernce,
  *   redirect standard out to a file specified by outputfile.
- *   The rest of the behaviour is same as do_exec()
+ *   The rest of the bedhaviour is same as do_exec()
  *
 */
+    int kidpid, status, fd;
+    
+
+    kidpid = fork();
+    if (kidpid == -1)
+    {
+        return false;
+    }
+    else if (kidpid == 0)
+    {
+        fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
+        if (fd < 0) { 
+            perror("open");
+            return false;
+        }
+        if (dup2(fd, 1) == -1) { 
+            perror("dup2"); 
+            return false; 
+        }
+        
+        int ret = execv(command[0], command);
+        printf("**************** %d \n", ret);
+        if(ret == -1){
+            return false;
+        }
+        else
+            exit(1);
+    }
+
+    pid_t childpid = wait(&status);
+    int childRet = WEXITSTATUS(childpid);
+    if (childRet == -1)
+    {
+        perror("Failed to lauch execv()");
+        return false;
+    }
 
     va_end(args);
 
