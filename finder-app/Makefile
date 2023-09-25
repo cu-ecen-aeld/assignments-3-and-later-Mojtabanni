@@ -1,9 +1,27 @@
-CC = $(CROSS_COMPILE)gcc
+DEFAULT_CC = gcc 
+CC = $(DEFAULT_CC)
 
-all: writer
+ifdef CROSS_COMPILE
+	CC = $(CROSS_COMPILE)$(DEFAULT_CC)
+endif
 
-writer: 
-	$(CC) writer.c -o writer
+CFLAGS = -Wall -Werror
+LDFLAGS = 
+
+SRCS = writer.c
+
+OBJS = $(SRCS:.c=.o)
+
+TARGET = writer
+
+all: $(TARGET)
+		
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $^
 
 clean:
-	rm -f *.o writer
+	rm -f $(OBJS) $(TARGET)
+
