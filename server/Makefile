@@ -8,7 +8,12 @@ endif
 CFLAGS = -Wall -Werror
 LDFLAGS = 
 
-SRCS = aesdsocket.c
+SRCS = \
+	aesdsocket.h \
+	aesdsocket.c \
+	handlefiles.h \
+	handlefiles.c \
+	main.c
 
 OBJS = $(SRCS:.c=.o)
 
@@ -23,5 +28,4 @@ $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
 clean:
-	rm -f $(OBJS) $(TARGET)
-
+	rm -f *.o $(TARGET)
