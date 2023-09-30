@@ -2,12 +2,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <errno.h>
 #include <syslog.h>
+#include <errno.h>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "aesdsocket.h"
-#include "handlefiles.h"
 
 #define PORT 9000
 #define BUFF_SIZE 1024
@@ -95,7 +96,7 @@ int main(int argc, char **argv)
     int rc_listen = listen_conn(sockfd);
     CHECK_EXIT_CONDITION(rc_listen, "listen_conn");
 
-    int pfd = open_file(FILE_PATH);
+    int pfd = open(FILE_PATH, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     CHECK_EXIT_CONDITION(pfd, "open_file");
 
     while (accept_conn_loop)
@@ -120,7 +121,7 @@ int main(int argc, char **argv)
             int rc_recvdata = recv_data(connfd, recv_buff, BUFF_SIZE);
             CHECK_EXIT_CONDITION(rc_recvdata, "recv_data");
 
-            int rc_writefile = write_file(pfd, (const void *)recv_buff, rc_recvdata);
+            int rc_writefile = write(pfd, (const void *)recv_buff, rc_recvdata);
             CHECK_EXIT_CONDITION(rc_writefile, "write_file");
 
             char *pch = strstr(recv_buff, "\n");
@@ -133,7 +134,7 @@ int main(int argc, char **argv)
         lseek(pfd, 0L, SEEK_SET);
         do
         {
-            int rc_readfile = read_file(pfd, send_buff, BUFF_SIZE);
+            int rc_readfile = read(pfd, send_buff, BUFF_SIZE);
             CHECK_EXIT_CONDITION(rc_readfile, "read_file");
             int rc_senddata = send_data(connfd, send_buff, rc_readfile);
             CHECK_EXIT_CONDITION(rc_senddata, "send_data");
@@ -141,13 +142,13 @@ int main(int argc, char **argv)
             memset(send_buff, 0, BUFF_SIZE);
         } while (data_size > 0);
 
-        syslog(LOG_INFO, "Closed connection from %s", str_ipcli);
+        syslog(LOG_INFO, "Accepted connection from %s", str_ipcli);
     }
 
     /// shutdown
     close(pfd);
-    closelog();
     remove(FILE_PATH);
+    closelog();
 
     return 0;
 }
