@@ -1,5 +1,6 @@
 #include "handlefiles.h"
 #include <fcntl.h>
+#include <sys/stat.h>
 
 int open_file(char *pathaname)
 {
