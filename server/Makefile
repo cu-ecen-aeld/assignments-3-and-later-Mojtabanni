@@ -1,29 +1,8 @@
-DEFAULT_CC = gcc 
-CC = $(DEFAULT_CC)
+CC ?= $(CROSS_COMPILE)gcc
 
-ifdef CROSS_COMPILE
-	CC = $(CROSS_COMPILE)$(DEFAULT_CC)
-endif
-
-CFLAGS = -Wall -Werror
-LDFLAGS = 
-
-SRCS = \
-	aesdsocket.h \
-	aesdsocket.c \
-	main.c
-
-OBJS = $(SRCS:.c=.o)
-
-TARGET = aesdsocket
-
-all: $(TARGET)
-		
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $^
-
+default:
+	${CC} -pthread -Wall -o aesdsocket aesdsocket.c
+all:
+	${CC} -pthread -Wall -o aesdsocket aesdsocket.c
 clean:
-	rm -f *.o $(TARGET)
+	rm -rf aesdsocket
